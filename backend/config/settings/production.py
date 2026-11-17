@@ -37,7 +37,14 @@ if not DEBUG:
     SECURE_HSTS_PRELOAD = True
 
 # Database Configuration
+# 1. Cloud PostgreSQL (Neon / Supabase / Vercel Postgres via DATABASE_URL or POSTGRES_URL)
+# 2. Remote PostgreSQL host (DB_HOST != localhost)
+# 3. Serverless fallback: Writable SQLite in /tmp seeded with initial accounts
+# 4. Local machine: Local PostgreSQL or SQLite
+
+is_serverless = os.environ.get('VERCEL') == '1' or os.environ.get('AWS_LAMBDA_FUNCTION_NAME') is not None
 database_url = os.environ.get('DATABASE_URL') or os.environ.get('POSTGRES_URL')
+db_host = os.environ.get('DB_HOST', '').strip()
 
 if database_url:
     url = urllib.parse.urlparse(database_url)
@@ -52,14 +59,28 @@ if database_url:
             'CONN_MAX_AGE': 600,
         }
     }
-elif os.environ.get('DB_ENGINE') and 'sqlite' not in os.environ.get('DB_ENGINE', ''):
+elif db_host and db_host not in ('localhost', '127.0.0.1', '/tmp'):
+    # Remote cloud host
     DATABASES = {
         'default': {
             'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.postgresql'),
             'NAME': os.environ.get('DB_NAME', 'yerootech'),
             'USER': os.environ.get('DB_USER', 'postgres'),
             'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'HOST': db_host,
+            'PORT': os.environ.get('DB_PORT', '5432'),
+            'CONN_MAX_AGE': 600,
+        }
+    }
+elif not is_serverless and os.environ.get('DB_ENGINE') and 'sqlite' not in os.environ.get('DB_ENGINE', ''):
+    # Local server / container with local Postgres daemon
+    DATABASES = {
+        'default': {
+            'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.postgresql'),
+            'NAME': os.environ.get('DB_NAME', 'yerootech'),
+            'USER': os.environ.get('DB_USER', 'postgres'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+            'HOST': db_host or 'localhost',
             'PORT': os.environ.get('DB_PORT', '5432'),
             'CONN_MAX_AGE': 600,
         }

@@ -9,8 +9,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-# Database configuration (supports DATABASE_URL, SQLite, and PostgreSQL via .env)
+# Database configuration
+is_serverless = os.environ.get('VERCEL') == '1' or os.environ.get('AWS_LAMBDA_FUNCTION_NAME') is not None
 database_url = os.environ.get('DATABASE_URL') or os.environ.get('POSTGRES_URL')
+db_host = os.environ.get('DB_HOST', '').strip()
 db_engine = os.environ.get('DB_ENGINE', '')
 
 if database_url:
@@ -25,8 +27,20 @@ if database_url:
             'PORT': str(url.port or 5432),
         }
     }
-elif db_engine and 'sqlite' not in db_engine:
-    db_host = os.environ.get('DB_HOST', '')
+elif db_host and db_host not in ('localhost', '127.0.0.1', '/tmp'):
+    # Remote cloud host
+    DATABASES = {
+        'default': {
+            'ENGINE': db_engine or 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'yerootech'),
+            'USER': os.environ.get('DB_USER', 'postgres'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+            'HOST': db_host,
+            'PORT': os.environ.get('DB_PORT', '5432'),
+        }
+    }
+elif not is_serverless and db_engine and 'sqlite' not in db_engine:
+    # Running locally with Postgres daemon
     if not db_host or db_host in ('localhost', '127.0.0.1'):
         if os.path.exists('/tmp/.s.PGSQL.5432'):
             db_host = '/tmp'
@@ -53,13 +67,7 @@ else:
         except Exception:
             pass
 
-    # Use /tmp on serverless environments where repo root is read-only
-    is_serverless = os.environ.get('VERCEL') == '1' or os.environ.get('AWS_LAMBDA_FUNCTION_NAME') is not None
-    if is_serverless and os.path.exists('/tmp'):
-        target_db = tmp_db
-    else:
-        target_db = BASE_DIR / 'db.sqlite3'
-
+    target_db = tmp_db if (is_serverless and os.path.exists('/tmp')) else (BASE_DIR / 'db.sqlite3')
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
