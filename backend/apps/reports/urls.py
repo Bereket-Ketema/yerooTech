@@ -1,10 +1,9 @@
-from django.urls import path
+from django.urls import re_path
 from . import views
 
 urlpatterns = [
-    path('summary/', views.AttendanceAnalyticsSummaryView.as_view(), name='reports-summary'),
-    path('export/csv/', views.ExportAttendanceCSVView.as_view(), name='export-csv'),
-    path('export/excel/', views.ExportAttendanceExcelView.as_view(), name='export-excel'),
-    path('export/pdf/', views.ExportAttendancePDFView.as_view(), name='export-pdf'),
+    re_path(r'^summary/?$', views.AttendanceAnalyticsSummaryView.as_view(), name='reports-summary'),
+    re_path(r'^export/csv/?$', views.ExportAttendanceCSVView.as_view(), name='export-csv'),
+    re_path(r'^export/excel/?$', views.ExportAttendanceExcelView.as_view(), name='export-excel'),
+    re_path(r'^export/pdf/?$', views.ExportAttendancePDFView.as_view(), name='export-pdf'),
 ]
-

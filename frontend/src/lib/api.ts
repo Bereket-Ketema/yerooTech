@@ -25,7 +25,10 @@ export function getApiBaseUrl(): string {
 
 export function buildApiUrl(endpoint: string): string {
   const base = getApiBaseUrl();
-  const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  let path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  if (!path.includes('?') && !path.endsWith('/') && !path.includes('.')) {
+    path = `${path}/`;
+  }
   return `${base}${path}`;
 }
 

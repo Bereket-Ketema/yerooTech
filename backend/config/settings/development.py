@@ -26,13 +26,20 @@ if database_url:
         }
     }
 elif db_engine and 'sqlite' not in db_engine:
+    db_host = os.environ.get('DB_HOST', '')
+    if not db_host or db_host in ('localhost', '127.0.0.1'):
+        if os.path.exists('/tmp/.s.PGSQL.5432'):
+            db_host = '/tmp'
+        else:
+            db_host = 'localhost'
+
     DATABASES = {
         'default': {
             'ENGINE': db_engine,
             'NAME': os.environ.get('DB_NAME', 'yerootech'),
             'USER': os.environ.get('DB_USER', 'postgres'),
             'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-            'HOST': os.environ.get('DB_HOST', '/tmp'),
+            'HOST': db_host,
             'PORT': os.environ.get('DB_PORT', '5432'),
         }
     }
