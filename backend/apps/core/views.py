@@ -48,3 +48,4 @@ class HealthCheckView(APIView):
             "migration_action": migration_output,
             "version": "1.0.0",
         })
+
