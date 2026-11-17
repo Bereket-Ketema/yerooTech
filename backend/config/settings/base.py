@@ -29,12 +29,14 @@ DEBUG = False
 
 ALLOWED_HOSTS = [
     h.strip()
-    for h in os.environ.get(
-        'ALLOWED_HOSTS',
-        'localhost,127.0.0.1,.vercel.app'
-    ).split(',')
+    for h in os.environ.get('ALLOWED_HOSTS', '*').split(',')
     if h.strip()
 ]
+
+# Guarantee Vercel domains, localhost, and wildcard are always permitted
+for default_h in ['.vercel.app', 'yerootech.vercel.app', 'localhost', '127.0.0.1', '*']:
+    if default_h not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(default_h)
 
 # Application definition
 DJANGO_APPS = [
@@ -196,6 +198,16 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https:\/\/.*\.vercel\.app$",
 ]
 CORS_ALLOW_CREDENTIALS = True
+
+# CSRF Trusted Origins for Vercel and local
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.vercel.app',
+    'https://yerootech.vercel.app',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
 
 # Google OAuth
 GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')

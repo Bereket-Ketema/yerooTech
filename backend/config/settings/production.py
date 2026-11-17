@@ -9,11 +9,20 @@ DEBUG = os.environ.get('DEBUG', 'False').lower() in ('true', '1')
 
 ALLOWED_HOSTS = [
     h.strip()
-    for h in os.environ.get(
-        'ALLOWED_HOSTS',
-        '*'
-    ).split(',')
+    for h in os.environ.get('ALLOWED_HOSTS', '*').split(',')
     if h.strip()
+]
+
+# Guarantee Vercel domains, localhost, and wildcard are always permitted
+for default_h in ['.vercel.app', 'yerootech.vercel.app', 'localhost', '127.0.0.1', '*']:
+    if default_h not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(default_h)
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.vercel.app',
+    'https://yerootech.vercel.app',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
 ]
 
 # Security headers (only enforced when not running in debug)
