@@ -2,6 +2,16 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+from pathlib import Path
+
+# Automatically inject the project's virtual environment site-packages if not activated
+BASE_DIR = Path(__file__).resolve().parent
+VENV_DIR = BASE_DIR.parent / 'venv'
+if VENV_DIR.exists():
+    for site_pkg in VENV_DIR.glob('lib/python*/site-packages'):
+        site_pkg_str = str(site_pkg)
+        if site_pkg_str not in sys.path:
+            sys.path.insert(0, site_pkg_str)
 
 
 def main():
@@ -20,4 +30,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
