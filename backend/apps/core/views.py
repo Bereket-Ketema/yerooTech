@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db import connection
 from django.core.management import call_command
-from django.conf import settings
+from django.contrib.auth import get_user_model
 
 
 class HealthCheckView(APIView):
@@ -25,8 +25,8 @@ class HealthCheckView(APIView):
                 cursor.execute("SELECT 1")
             db_status = "connected"
 
-            # Check if User table exists
-            from apps.accounts.models import User
+            # Check if User table exists and query count
+            User = get_user_model()
             user_count = User.objects.count()
         except Exception as e:
             db_status = "error"
@@ -42,7 +42,7 @@ class HealthCheckView(APIView):
                 call_command('migrate', interactive=False)
                 call_command('seed_data')
                 migration_output = "Migrations and seed data applied successfully."
-                from apps.accounts.models import User
+                User = get_user_model()
                 user_count = User.objects.count()
                 db_status = "connected"
                 error_detail = None
