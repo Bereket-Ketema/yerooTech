@@ -7,6 +7,19 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+# Auto-load .env file if present
+def _load_env_file(path):
+    if path.is_file():
+        with open(path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    k, v = line.split('=', 1)
+                    os.environ.setdefault(k.strip(), v.strip().strip("'").strip('"'))
+
+_load_env_file(BASE_DIR.parent / '.env')
+_load_env_file(BASE_DIR / '.env')
+
 SECRET_KEY = os.environ.get(
     'DJANGO_SECRET_KEY',
     'django-insecure-dev-key-change-in-production-yerootech-2024'
