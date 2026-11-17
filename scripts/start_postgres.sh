@@ -10,3 +10,4 @@ else
     pg_ctl -D "$DATA_DIR" -l "$LOG_FILE" start
     echo "PostgreSQL started successfully on port 5432."
 fi
+

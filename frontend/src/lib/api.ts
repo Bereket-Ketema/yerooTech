@@ -1,4 +1,33 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
+/**
+ * Resolve the API base URL dynamically:
+ * 1. Server-side in Next.js runtime (SSR, Route Handlers, Server Actions):
+ *    Uses Vercel's internal service binding `process.env.BACKEND_URL`.
+ * 2. Explicit public API URL if configured via `NEXT_PUBLIC_API_URL`.
+ * 3. Client-side browser in unified Vercel deployment:
+ *    Uses same-origin relative `/api/v1` (routed by Vercel top-level rewrites).
+ * 4. Fallback for standalone SSR in local dev:
+ *    `http://127.0.0.1:8000/api/v1`.
+ */
+export function getApiBaseUrl(): string {
+  if (typeof window === 'undefined') {
+    if (process.env.BACKEND_URL) {
+      return `${process.env.BACKEND_URL.replace(/\/+$/, '')}/api/v1`;
+    }
+  }
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, '');
+  }
+  if (typeof window !== 'undefined') {
+    return '/api/v1';
+  }
+  return 'http://127.0.0.1:8000/api/v1';
+}
+
+export function buildApiUrl(endpoint: string): string {
+  const base = getApiBaseUrl();
+  const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  return `${base}${path}`;
+}
 
 export class ApiError extends Error {
   status: number;
@@ -11,7 +40,7 @@ export class ApiError extends Error {
 }
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`;
+  const url = buildApiUrl(endpoint);
   const headers = new Headers(options.headers || {});
 
   if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {

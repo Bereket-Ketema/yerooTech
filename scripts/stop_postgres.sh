@@ -9,3 +9,4 @@ if pg_isready -h localhost -p 5432 >/dev/null 2>&1; then
 else
     echo "PostgreSQL is not currently running."
 fi
+

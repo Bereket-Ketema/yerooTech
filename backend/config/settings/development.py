@@ -1,14 +1,28 @@
 """Development settings."""
+import urllib.parse
 from .base import *
 
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-# Database configuration (defaults to SQLite; switches to PostgreSQL if configured in .env)
-db_engine = os.environ.get('DB_ENGINE', 'django.db.backends.sqlite3')
+# Database configuration (supports DATABASE_URL, SQLite, and PostgreSQL via .env)
+database_url = os.environ.get('DATABASE_URL') or os.environ.get('POSTGRES_URL')
+db_engine = os.environ.get('DB_ENGINE', 'django.db.backends.postgresql')
 
-if 'sqlite' in db_engine:
+if database_url:
+    url = urllib.parse.urlparse(database_url)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': url.path[1:] if url.path.startswith('/') else url.path,
+            'USER': url.username or '',
+            'PASSWORD': url.password or '',
+            'HOST': url.hostname or '',
+            'PORT': str(url.port or 5432),
+        }
+    }
+elif 'sqlite' in db_engine:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -37,4 +51,3 @@ CORS_ALLOW_ALL_ORIGINS = True
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
-
